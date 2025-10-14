@@ -1,1 +1,39 @@
-text
+textextends layout
+
+block content
+  if error
+    .error-message
+      h2 Erreur
+      p= error
+    a(href="/") ← Retour à l'accueil
+  
+  else if weatherData
+    .weather-container
+      h1 Météo pour #{weatherData.location.name}
+      
+      .weather-info
+        .location
+          h2 #{weatherData.location.name}, #{weatherData.location.country}
+          p Région: #{weatherData.location.region}
+          p Local time: #{weatherData.location.localtime}
+        
+        .current-weather
+          .temperature
+            h3 #{weatherData.current.temp_c}°C
+            p Ressenti: #{weatherData.current.feelslike_c}°C
+          
+          .condition
+            img(src=weatherData.current.condition.icon alt=weatherData.current.condition.text)
+            p #{weatherData.current.condition.text}
+          
+          .details
+            p 💨 Vent: #{weatherData.current.wind_kph} km/h
+            p 💧 Humidité: #{weatherData.current.humidity}%
+            p 👁️ Visibilité: #{weatherData.current.vis_km} km
+            p 📊 Pression: #{weatherData.current.pressure_mb} mb
+    
+    a(href="/") ← Rechercher une autre ville
+
+  else
+    p Aucune donnée disponible
+    a(href="/") ← Retour à l'accueil

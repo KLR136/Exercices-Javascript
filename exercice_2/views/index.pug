@@ -2,4 +2,15 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{subtitle}
+  p= subtitle
+  
+  //- Formulaire de recherche qui redirige vers villes
+  form(method="POST" action="/search")
+    .search-container
+      input(
+        type="text" 
+        name="city" 
+        placeholder="Entrez le nom d'une ville..."
+        required
+      )
+      button(type="submit") Rechercher
