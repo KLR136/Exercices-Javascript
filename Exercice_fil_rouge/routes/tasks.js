@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const sql = require('./sql'); 
 
+const filters = [{name: 'title', getQuery: value => `title LIKE '%${value}%'`}, 
+{name: 'done', getQuery: value => `done = ${value === 'true' ? 1 : 0}`},
+{name: 'late', getQuery: value => `done = 0 AND datetime < NOW()`}];
 
 router.get('/', async (req, res) => {
     try {
@@ -34,7 +37,6 @@ router.get('/', async (req, res) => {
             query += ' AND done = 0 AND datetime < NOW()';
         }
 
-        // CORRECTION : utiliser "limit" au lieu de "limite"
         let parsedLimit = parseInt(limit);
         if (parsedLimit > 100) {
             parsedLimit = 100;
@@ -53,10 +55,10 @@ router.get('/', async (req, res) => {
         
         query += ` ORDER BY ${sortColumn} ${order}`;
         query += ' LIMIT ? OFFSET ?';
-        
-        const offset = (page - 1) * parsedLimit;  // Utiliser parsedLimit ici
-        params.push(parsedLimit, parseInt(offset));  // Utiliser parsedLimit ici
-        
+
+        const offset = (page - 1) * parsedLimit;
+        params.push(parsedLimit, parseInt(offset));
+
         const [results] = await connection.query(query, params);
         await connection.end();
         
@@ -70,9 +72,9 @@ router.get('/', async (req, res) => {
             tasks: tasks,
             pagination: {
                 page: parseInt(page),
-                limit: parsedLimit,  // Utiliser parsedLimit ici
+                limit: parsedLimit,
                 total: total,
-                pages: Math.ceil(total / parsedLimit)  // Utiliser parsedLimit ici
+                pages: Math.ceil(total / parsedLimit)
             },
             filters: {
                 title: title || null,
