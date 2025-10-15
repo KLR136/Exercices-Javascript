@@ -3,7 +3,6 @@ const router = express.Router();
 const sql = require('./sql'); 
 
 
-// Route pour récupérer toutes les tâches
 router.get('/', async (req, res) => {
     try {
         const { 
@@ -12,17 +11,15 @@ router.get('/', async (req, res) => {
             late, 
             page = 1, 
             limit = 10,
-            sortBy = 'datetime',
-            sortOrder = 'DESC'
+            sortBy = 'id',
+            sortOrder = 'ASC'
         } = req.query;
         
         const connection = await sql.getConnection();
         
-        // Construction de la requête de base
         let query = 'SELECT * FROM task WHERE 1=1';
         const params = [];
         
-        // Filtres
         if (title) {
             query += ' AND title LIKE ?';
             params.push(`%${title}%`);
@@ -36,27 +33,33 @@ router.get('/', async (req, res) => {
         if (late === 'true') {
             query += ' AND done = 0 AND datetime < NOW()';
         }
+
+        // CORRECTION : utiliser "limit" au lieu de "limite"
+        let parsedLimit = parseInt(limit);
+        if (parsedLimit > 100) {
+            parsedLimit = 100;
+        }
+        if (parsedLimit < 1) {
+            parsedLimit = 1;
+        }
         
-        // Comptage total pour la pagination
         const countQuery = `SELECT COUNT(*) as total FROM (${query}) as filtered`;
         const [countResult] = await connection.query(countQuery, params);
         const total = countResult[0].total;
         
-        // Ajout du tri et pagination
         const validSortColumns = ['id', 'title', 'done', 'datetime'];
-        const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'datetime';
+        const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'id';
         const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
         
         query += ` ORDER BY ${sortColumn} ${order}`;
         query += ' LIMIT ? OFFSET ?';
         
-        const offset = (page - 1) * limit;
-        params.push(parseInt(limit), parseInt(offset));
+        const offset = (page - 1) * parsedLimit;  // Utiliser parsedLimit ici
+        params.push(parsedLimit, parseInt(offset));  // Utiliser parsedLimit ici
         
         const [results] = await connection.query(query, params);
         await connection.end();
         
-        // Transformation des données
         const tasks = results.map(task => ({
             ...task,
             done: Boolean(task.done),
@@ -67,9 +70,9 @@ router.get('/', async (req, res) => {
             tasks: tasks,
             pagination: {
                 page: parseInt(page),
-                limit: parseInt(limit),
+                limit: parsedLimit,  // Utiliser parsedLimit ici
                 total: total,
-                pages: Math.ceil(total / limit)
+                pages: Math.ceil(total / parsedLimit)  // Utiliser parsedLimit ici
             },
             filters: {
                 title: title || null,
@@ -86,7 +89,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Route pour une tâche spécifique
 router.get('/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
@@ -106,7 +108,6 @@ router.get('/:id', async (req, res) => {
 });
 
 
-// Créer une nouvelle tâche
 router.post('/', async (req, res) => {
     try {
         const { title } = req.body;
@@ -134,7 +135,6 @@ router.post('/', async (req, res) => {
 });
 
 
-// Mettre à jour une tâche
 router.patch('/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
@@ -198,7 +198,6 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// Supprimer une tâche
 router.delete('/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
