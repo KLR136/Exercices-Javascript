@@ -3,10 +3,9 @@ const { Sequelize, DataTypes, Op } = require('sequelize');
 const sequelize = new Sequelize('festival', 'root', 'AdriNatami08', {
     host: 'localhost',
     dialect: 'mysql',
-    logging: false // Désactive les logs SQL
+    logging: false 
 });
 
-// Modèle User
 const User = sequelize.define('User', {
     id: {
         type: DataTypes.INTEGER,
@@ -34,7 +33,6 @@ const User = sequelize.define('User', {
     tableName: 'users'
 });
 
-// Modèle Task
 const Task = sequelize.define('Task', {
     id: {
         type: DataTypes.INTEGER,
@@ -67,7 +65,6 @@ const Task = sequelize.define('Task', {
     tableName: 'tasks'
 });
 
-// Modèles existants (Concerts, Bands, Artists)
 const Concert = sequelize.define('Concert', {
     datetime: DataTypes.DATE,
     title: DataTypes.STRING
@@ -90,24 +87,25 @@ const Artist = sequelize.define('Artist', {
     tableName: 'artists'
 });
 
-// Définition des relations
 User.hasMany(Task, { foreignKey: 'userId' });
 Task.belongsTo(User, { foreignKey: 'userId' });
 
-// Relations pour les concerts (à adapter selon votre structure)
-Concert.belongsToMany(Band, { through: 'Concert_Bands' });
-Band.belongsToMany(Concert, { through: 'Concert_Bands' });
 
-Band.belongsToMany(Artist, { 
-    through: 'Band_Artists',
-    foreignKey: 'bandId',
-    otherKey: 'artistId'
+Band.hasMany(Concert, { foreignKey: 'bandId' });
+Concert.belongsTo(Band, { foreignKey: 'bandId' });
+
+const BandArtist = sequelize.define('Band_Artist', {
+    role: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+}, {
+    tableName: 'band_artists'
 });
-Artist.belongsToMany(Band, { 
-    through: 'Band_Artists',
-    foreignKey: 'artistId',
-    otherKey: 'bandId'
-});
+
+Band.belongsToMany(Artist, { through: BandArtist });
+Artist.belongsToMany(Band, { through: BandArtist });
+
 
 module.exports = {
     sequelize,
