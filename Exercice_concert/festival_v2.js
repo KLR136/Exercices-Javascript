@@ -113,5 +113,6 @@ module.exports = {
     Task,
     Concert,
     Band,
-    Artist
+    Artist,
+    BandArtist
 };
